@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { Typography, Grid, Card, CardContent, Box } from '@mui/material';
 import CustomPagination from '@/components/common/Pagination/CustomPagination';
+import Link from 'next/link';
 
 interface Product {
   id: number;
@@ -41,14 +42,22 @@ export default async function ProductsPage({
       <Grid container spacing={3}>
         {products.map((product) => (
           <Grid item xs={12} sm={6} md={4} key={product.id}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" component="h2">
-                  {product.name}
-                </Typography>
-                <Typography color="text.secondary">${product.price}</Typography>
-              </CardContent>
-            </Card>
+            <Link
+              href={`/products/${product.id}`}
+              passHref
+              style={{ textDecoration: 'none' }}
+            >
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" component="h2">
+                    {product.name}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    ${product.price}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Link>
           </Grid>
         ))}
       </Grid>

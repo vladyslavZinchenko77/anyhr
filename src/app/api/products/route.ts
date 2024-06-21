@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
- const products = [
+const products = [
     { id: 1, name: 'Product 1', price: 10 },
     { id: 2, name: 'Product 2', price: 20 },
     { id: 3, name: 'Product 3', price: 30 },
@@ -16,8 +16,7 @@ import { NextResponse } from 'next/server';
     { id: 13, name: 'Product 13', price: 130 },
     { id: 14, name: 'Product 14', price: 140 },
     { id: 15, name: 'Product 15', price: 150 },
-  ];
-
+];
   
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

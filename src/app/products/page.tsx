@@ -16,7 +16,8 @@ interface ProductsResponse {
 }
 
 async function getProducts(page: number): Promise<ProductsResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || 'https://anyhr-three.vercel.app/';
   const res = await fetch(`${baseUrl}/api/products?page=${page}`, {
     cache: 'no-store',
   });

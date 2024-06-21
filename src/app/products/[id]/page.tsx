@@ -7,13 +7,22 @@ interface Product {
   price: number;
 }
 
+const baseUrl =
+  process.env.NODE_ENV === 'production'
+    ? 'https://your-api-domain.com' // Замените на URL вашего API
+    : '';
+
 async function getProduct(id: string): Promise<Product> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const res = await fetch(`${baseUrl}/api/products/${id}`);
-  if (!res.ok) {
-    throw new Error('Failed to fetch product');
+  try {
+    const res = await fetch(`${baseUrl}/api/products/${id}`);
+    if (!res.ok) {
+      throw new Error('Failed to fetch product');
+    }
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    throw error;
   }
-  return res.json();
 }
 
 export async function generateMetadata({
@@ -21,22 +30,33 @@ export async function generateMetadata({
 }: {
   params: { id: string };
 }): Promise<Metadata> {
-  const product = await getProduct(params.id);
-
-  return {
-    title: `${product.name} | Our Store`,
-    description: `Details about ${product.name}`,
-  };
+  try {
+    const product = await getProduct(params.id);
+    return {
+      title: `${product.name} | Our Store`,
+      description: `Details about ${product.name}`,
+    };
+  } catch (error) {
+    console.error('Error generating metadata:', error);
+    return {
+      title: 'Product | Our Store',
+      description: 'Product details',
+    };
+  }
 }
 
 export async function generateStaticParams() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const res = await fetch(`${baseUrl}/api/products`);
-  const data = await res.json();
+  try {
+    const res = await fetch(`${baseUrl}/api/products`);
+    const data = await res.json();
 
-  return data.products.map((product: Product) => ({
-    id: product.id.toString(),
-  }));
+    return data.products.map((product: Product) => ({
+      id: product.id.toString(),
+    }));
+  } catch (error) {
+    console.error('Failed to generate static params:', error);
+    return []; // Return an empty array if fetching fails
+  }
 }
 
 export default async function ProductPage({
@@ -44,10 +64,10 @@ export default async function ProductPage({
 }: {
   params: { id: string };
 }) {
-  const product = await getProduct(params.id);
+  try {
+    const product = await getProduct(params.id);
 
-  return (
-    <>
+    return (
       <Box component="main" sx={{ padding: 3 }}>
         <Paper elevation={3} sx={{ padding: 3 }}>
           <Typography variant="h4" component="h1" gutterBottom>
@@ -61,6 +81,20 @@ export default async function ProductPage({
           </Typography>
         </Paper>
       </Box>
-    </>
-  );
+    );
+  } catch (error) {
+    return (
+      <Box component="main" sx={{ padding: 3 }}>
+        <Paper elevation={3} sx={{ padding: 3 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Error Loading Product
+          </Typography>
+          <Typography variant="body1">
+            Sorry, we couldn't load the product information. Please try again
+            later.
+          </Typography>
+        </Paper>
+      </Box>
+    );
+  }
 }

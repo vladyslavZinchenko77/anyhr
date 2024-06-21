@@ -1,7 +1,5 @@
-import { Suspense } from 'react';
-import { Typography, Grid, Card, CardContent, Box } from '@mui/material';
-import CustomPagination from '@/components/common/Pagination/CustomPagination';
-import Link from 'next/link';
+import { Typography, Box, Paper } from '@mui/material';
+import { Metadata } from 'next';
 
 interface Product {
   id: number;
@@ -9,64 +7,96 @@ interface Product {
   price: number;
 }
 
-interface ProductsResponse {
-  products: Product[];
-  totalPages: number;
-  currentPage: number;
-}
+const apiBaseUrl = '/api/products';
 
-async function getProducts(page: number): Promise<ProductsResponse> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL || 'https://anyhr-three.vercel.app/';
-  const res = await fetch(`${baseUrl}/api/products?page=${page}`, {
-    cache: 'no-store',
-  });
-  if (!res.ok) {
-    throw new Error('Failed to fetch products');
+async function getProduct(id: string): Promise<Product> {
+  try {
+    const res = await fetch(`${apiBaseUrl}/${id}`);
+    if (!res.ok) {
+      throw new Error('Failed to fetch product');
+    }
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    throw error;
   }
-  return res.json();
 }
 
-export default async function ProductsPage({
-  searchParams,
+export async function generateMetadata({
+  params,
 }: {
-  searchParams: { page: string };
-}) {
-  const page = parseInt(searchParams.page || '1');
-  const { products, totalPages, currentPage } = await getProducts(page);
+  params: { id: string };
+}): Promise<Metadata> {
+  try {
+    const product = await getProduct(params.id);
+    return {
+      title: `${product.name} | Our Store`,
+      description: `Details about ${product.name}`,
+    };
+  } catch (error) {
+    console.error('Error generating metadata:', error);
+    return {
+      title: 'Product | Our Store',
+      description: 'Product details',
+    };
+  }
+}
 
-  return (
-    <Box component="main" sx={{ padding: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Products Catalog
-      </Typography>
-      <Grid container spacing={3}>
-        {products.map((product) => (
-          <Grid item xs={12} sm={6} md={4} key={product.id}>
-            <Link
-              href={`/products/${product.id}`}
-              passHref
-              style={{ textDecoration: 'none' }}
-            >
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" component="h2">
-                    {product.name}
-                  </Typography>
-                  <Typography color="text.secondary">
-                    ${product.price}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Link>
-          </Grid>
-        ))}
-      </Grid>
-      <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 3 }}>
-        <Suspense fallback={<div>Loading...</div>}>
-          <CustomPagination totalPages={totalPages} currentPage={currentPage} />
-        </Suspense>
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(apiBaseUrl);
+    if (!res.ok) {
+      throw new Error(
+        `Failed to fetch products: ${res.status} ${res.statusText}`
+      );
+    }
+    const data = await res.json();
+
+    return data.products.map((product: Product) => ({
+      id: product.id.toString(),
+    }));
+  } catch (error) {
+    console.error('Failed to generate static params:', error);
+    return [];
+  }
+}
+
+export default async function ProductPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  try {
+    const product = await getProduct(params.id);
+
+    return (
+      <Box component="main" sx={{ padding: 3 }}>
+        <Paper elevation={3} sx={{ padding: 3 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            {product.name}
+          </Typography>
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            Price: ${product.price}
+          </Typography>
+          <Typography variant="body1">
+            Product description goes here...
+          </Typography>
+        </Paper>
       </Box>
-    </Box>
-  );
+    );
+  } catch (error) {
+    return (
+      <Box component="main" sx={{ padding: 3 }}>
+        <Paper elevation={3} sx={{ padding: 3 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Error Loading Product
+          </Typography>
+          <Typography variant="body1">
+            Sorry, we couldn't load the product information. Please try again
+            later.
+          </Typography>
+        </Paper>
+      </Box>
+    );
+  }
 }

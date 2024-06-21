@@ -16,7 +16,7 @@ const products = [
     { id: 13, name: 'Product 13', price: 130 },
     { id: 14, name: 'Product 14', price: 140 },
     { id: 15, name: 'Product 15', price: 150 },
-  ];
+];
 
 export async function GET(
   request: Request,
